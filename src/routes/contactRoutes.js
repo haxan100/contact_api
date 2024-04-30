@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const Contact = require('../models/contact');
-const { listContacts,updateContact,deleteContact,deleteContacts } = require('../controllers/contactController');
+const { listContacts,updateContact,deleteContact,deleteContacts, ExportlistContacts } = require('../controllers/contactController');
 const multer = require('multer');
 
 
@@ -12,7 +12,6 @@ const storage = multer.memoryStorage(); // Menyimpan file di memory
 const upload = multer({ storage: storage });
 
 const { expressjwt: jwt } = require("express-jwt");
-
 
 router.use(jwt({
   secret: 'your_secret_key',
@@ -130,6 +129,8 @@ router.post('/importContacts', upload.single('file'), async (req, res) => {
     });
   }
 });
+router.get('/export', ExportlistContacts); // Rute untuk mengekspor daftar kontak ke Excel
+
 
 // Add more routes for update, delete, search
 

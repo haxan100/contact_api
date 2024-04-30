@@ -9,6 +9,8 @@ const Contact = require('../models/contact');
 //     res.status(500).send(error.message);
 //   }
 // };
+const ExcelJS = require('exceljs');
+
 const listContacts = async (req, res) => {
     const userId = req.auth.userId;
     // const { userId } = req.query; // Mengambil userId dari query jika ada
@@ -85,5 +87,34 @@ const deleteContacts = async (req, res) => {
       });
     }
 }
+const ExportlistContacts = async (req, res) => {
+  const userId = req.auth.userId;
+  try {
+    const contacts = await Contact.findByUserId(userId) ;
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Contacts');
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 5 },
+      { header: 'Name', key: 'name', width: 30 },
+      { header: 'Phone', key: 'phone', width: 15 },
+      { header: 'Email', key: 'email', width: 30 }
+    ];
+    contacts.forEach(contact => {
+      worksheet.addRow(contact);
+    });
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=' + 'contacts.xlsx'
+    );
+    await workbook.xlsx.write(res);
 
-module.exports = { listContacts,updateContact,deleteContact,deleteContacts };
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
+module.exports = { listContacts,updateContact,deleteContact,deleteContacts ,ExportlistContacts};
