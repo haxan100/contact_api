@@ -5,6 +5,7 @@ const router = express.Router();
 const Contact = require('../models/contact');
 const { listContacts,updateContact,deleteContact,deleteContacts, ExportlistContacts } = require('../controllers/contactController');
 const multer = require('multer');
+const Response = require('../../config/responseHelper'); // Adjust the path as necessary
 
 
 const ExcelJS = require('exceljs');
@@ -20,28 +21,21 @@ router.use(jwt({
   credentialsRequired: false // Memungkinkan request tanpa token
 }));
 
+
 router.use((req, res, next) => {
   if (!req.auth || !req.auth.userId) {
-    return res.status(401).json({
-      status: false,
-      responseText: "Harap kirimkan JWT"
-    });
+    return Response("Harap kirimkan JWT", false, {}, 401, res);
   }
   next();
 });
 
 router.use((err, req, res, next) => {
   if (err instanceof UnauthorizedError) {
+    let message = "Tidak ada akses"; // Default message
     if (err.code === 'token_expired') {
-      return res.status(401).json({
-        status: false,
-        responseText: "JWT telah kedaluwarsa"
-      });
+      message = "JWT telah kedaluwarsa"; 
     }
-    return res.status(401).json({
-      status: false,
-      responseText: "Tidak ada akses"
-    });
+    return Response(message, false, {}, 401, res);
   }
   next(err);
 });
@@ -51,13 +45,10 @@ router.post('/addContact', async (req, res) => {
   const { name, phone, email } = req.body;
   try {
     await Contact.addContact(userId, name, phone, email);
-    return res.status(200).json({
-      status: true,
-      responseText: "Contact added"
-    });
+    return Response("Contact added", false, { name, phone, email }, 200, res);
 
   } catch (error) {
-    res.status(500).send(error.message);
+    return Response(error.message, false, {}, 500, res);
   }
 });
 
@@ -129,9 +120,6 @@ router.post('/importContacts', upload.single('file'), async (req, res) => {
     });
   }
 });
-router.get('/export', ExportlistContacts); // Rute untuk mengekspor daftar kontak ke Excel
-
-
-// Add more routes for update, delete, search
+router.get('/export', ExportlistContacts); 
 
 module.exports = router;
