@@ -2,24 +2,17 @@ const Contact = require('../models/contact');
 const ExcelJS = require('exceljs');
 const Response = require('../../config/responseHelper'); // Adjust the path as necessary
 
+
 const listContacts = async (req, res) => {
   const userId = req.auth.userId;  // This assumes the userId is being extracted from auth data
   // const { userId } = req.query; // Uncomment this line to take userId from query parameters if needed
   try {
-      const contacts = await Contact.findByUserId(userId);
-      res.status(200).json({
-          message: "Contacts retrieved successfully",
-          status: true,
-          data: contacts  // Assuming 'contacts' is an array of contact objects
-      });
+    const contacts = await Contact.findByUserId(userId);
+    return Response("Contacts retrieved successfully", true, contacts, 200, res);
   } catch (error) {
-      res.status(500).json({
-          message: "Failed to retrieve contacts",
-          status: false,
-          data: {}  // Provide an empty object for consistency
-      });
+    return Response("Failed to retrieve contacts", false, {}, 500, res);
   }
-}
+};
 const updateContact = async (req, res) => {
   const userId = req.auth.userId;  // Authentication user ID
   const { id, name, phone, email } = req.body;  // Contact details from the request body
@@ -27,30 +20,18 @@ const updateContact = async (req, res) => {
   try {
     const updatedContact = await Contact.updateContact(id, userId, name, phone, email);
     if (updatedContact) {
-      res.status(200).json({
-        message: 'Kontak berhasil diupdate',  // Success message
-        status: true,  // Operation status
-        data: updatedContact  // Data containing the updated contact details
-      });
+      return Response('Kontak berhasil diupdate', true, updatedContact, 200, res);
     } else {
-      res.status(404).json({
-        message: 'Kontak tidak ditemukan atau tidak dapat diupdate',  // Not found or not updated message
-        status: false  // Operation status
-      });
+      return Response('Kontak tidak ditemukan atau tidak dapat diupdate', false, {}, 404, res);
     }
   } catch (error) {
-    res.status(500).json({
-      message: 'Terjadi kesalahan saat mengupdate kontak',  // Error message
-      status: false,  // Operation status
-      data: {}  // An empty object since no data is available in case of an error
-    });
+    return Response('Terjadi kesalahan saat mengupdate kontak', false, {}, 500, res);
   }
 };
 
 const deleteContact = async (req, res) => {
   const userId = req.auth.userId;  // Assuming the userId is being extracted correctly
   const { id } = req.body;  // Contact ID from the request body
-
   try {
     const success = await Contact.deleteContact(id, userId);
     if (success) {
